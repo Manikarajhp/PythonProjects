@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Plans With Mine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ---------- GLOBAL ---------- */
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #f2f4f7;
+}
+
+.hidden { display: none; }
+
+/* ---------- LOADER ---------- */
+#loader {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 26px;
+  letter-spacing: 2px;
+}
+
+/* ---------- CONTAINER ---------- */
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 16px;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+/* ---------- FORM ---------- */
+form {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.1);
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+/* ---------- TABLE ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th {
+  background: #007bff;
+  color: white;
+  padding: 10px;
+}
+
+td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.delete-btn {
+  background: #ff4d4d;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: white;
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 600px) {
+  form {
+    flex-direction: column;
+  }
+
+  table, thead, tbody, tr, td, th {
+    font-size: 14px;
+  }
+  table{
+    table-layout: fixed;
+    width: 100%;
+  }
+  td, tr{
+    max-width: 150px;   /* adjust */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOADER -->
+<div id="loader">Plans With Mine</div>
+
+<!-- APP -->
+<div class="container hidden">
+  <h2>Plans With Mine</h2>
+
+  <form id="planForm">
+    <input type="text" id="spot" placeholder="Spot" required>
+    <input type="text" id="place" placeholder="Location" required>
+    <button>Add</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Spot</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>❌</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<script>
+  
+/* ================= CONFIG ================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbzmb9-GIz71f0uwlNj_JBPsxmnj4dIk7-glOrGzDvEzqT9cz6dn6bz4XupLBv-1cfP9/exec";
+
+/* ================= LOADER ================= */
+setTimeout(() => {
+  loader.style.display = "none";
+  document.querySelector(".container").classList.remove("hidden");
+  loadData();
+}, 3000);
+
+/* ================= LOAD DATA ================= */
+function loadData() {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => renderTable(data));
+}
+
+/* ================= RENDER ================= */
+function renderTable(data) {
+  tableBody.innerHTML = "";
+
+  // Incomplete first
+  data.sort((a, b) => a[3] === "Completed" ? 1 : -1);
+
+  data.forEach((row, i) => {
+    tableBody.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${row[1].charAt(0).toUpperCase() + row[1].slice(1)}</td>
+        <td><a href="${row[2]}">Direction</a></td>
+        <td>
+          <input type="checkbox"
+            ${row[3] === "Completed" ? "checked" : ""}
+            onchange="updateStatus('${row[0]}', this.checked)">
+        </td>
+        <td>
+          <button class="delete-btn" onclick="deleteItem('${row[0]}')">X</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+/* ================= ADD ================= */
+planForm.addEventListener("submit", e => {
+  e.preventDefault();
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "add",
+      spot: spot.value,
+      location: place.value   // ✅ FIXED
+    })
+  }).then(() => {
+    spot.value = "";
+    place.value = "";
+    loadData();
+  });
+});
+
+/* ================= UPDATE ================= */
+function updateStatus(id, checked) {
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "update",
+      id,
+      status: checked ? "Completed" : "Pending"
+    })
+  }).then(loadData);
+}
+
+/* ================= DELETE ================= */
+function deleteItem(id) {
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "delete",
+      id
+    })
+  }).then(loadData);
+}
+</script>
+
+</body>
+</html>
