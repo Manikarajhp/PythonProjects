@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess My number</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <div class="container">
+            <h1>Guess my number</h1>
+        </div>
+        <form class="container" onsubmit="check()">
+            <input type="number" placeholder="Enter your guess" id="userGuess" required min="100">
+            <button type="submit">Check</button>
+        </form>
+        <div class="container">
+            <p><strong id="correct">0</strong> number correct, <strong id="position">0</strong> at correct position.</p>
+            <strong id="result"></strong>
+            <button onclick="restart()" style="display: none;margin-top: 7px;" id="restart-btn">Restart</button>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
